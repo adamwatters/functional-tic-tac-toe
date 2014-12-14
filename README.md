@@ -1,3 +1,3 @@
-tic-tac-toe without side effects or iteration
+tic-tac-toe without side effects or loops
 
 --> node game.js
