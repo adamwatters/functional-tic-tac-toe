@@ -1,0 +1,17 @@
+{
+  "name": "tic-tac-toe",
+  "description": "",
+  "version": "0.0.0",
+  "author": "Adam Watters",
+  "dependencies": {
+    "chalk": "^0.5.1"
+  },
+  "keywords": [],
+  "repository": "",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    }
+  ]
+}
