@@ -1,3 +1,6 @@
+var util = require('util');
+var chalk = require('chalk');
+
 var makeNewBoard = function(board) {
 	return board.map(function(c){
 		return c.slice();
@@ -95,19 +98,20 @@ var checkForGameEnd = function(state){
 	return handleNoEnd(state);
 };
 
-var genCoord = function(state){
-	return Math.floor(Math.random() * state.board.length);
+var genMove = function(state, input) {
+	var newBoard = makeNewBoard(state.board);
+	var x = input[0];
+	var y = input[1];
+	newBoard[x][y] = state.turn;
+	return newBoard;
 };
 
-var genMove = function(state) {
-	var newBoard = makeNewBoard(state.board);
-	var x = genCoord(state);
-	var y = genCoord(state);
-		if (newBoard[x][y] === '-'){
-			newBoard[x][y] = state.turn;
-			return newBoard;
-		}
-	return genMove(state);
+var runMove = function(state, input){
+	return {
+		board: genMove(state, input),
+		turn: state.turn,
+		winner: state.winner
+	}
 };
 
 var changeTurn = function	(state) {
@@ -118,29 +122,56 @@ var changeTurn = function	(state) {
 	}
 };
 
-var runMove = function(state){
-	return {
-		board: genMove(state),
-		turn: state.turn,
-		winner: state.winner
+var draw = function(state){
+	state.board.map(function(row){console.log(chalk.bold.yellow(row))});
+	console.log('');
+	if (state.winner === 'X' || state.winner === 'O') {
+		console.log(chalk.bold.cyan(state.winner + " is the winner!"));
+		process.exit();
+	} 
+	if (state.winner === 'draw') {
+		console.log(chalk.bold.cyan('bummer, its a draw'));
+		process.exit();
 	}
 };
 
-var draw = function(state){
-	state.board.map(function(row){console.log(row)});
-	console.log('');
-	if (state.winner === 'X' || state.winner === 'O') {
-		console.log(state.winner + " is the winner!");
-	} 
-	if (state.winner === 'draw') {
-		console.log('bummer, its a draw');
-	}
+var parseInput = function(text) {
+	return text.replace(/(\r\n|\n|\r)/gm,"").split(',').reverse();
+}
+
+var textIsValid = function(input, state) {
+	return ((input.length === 2)
+		&&(input[0] >= 0)
+		&&(input[0] <= state.board.length - 1)
+		&&(input[1] >= 0)
+		&&(input[1] <= state.board.length - 1))
+};
+
+var noCollision = function(input, state) {
+	return state.board[input[0]][input[1]] === '-';
+}
+
+var takeInput = function(state, gameCallBack) {
+	console.log(chalk.bold.white(state.turn + "'s turn\n"));
+	process.stdin.resume();
+  	process.stdin.setEncoding('utf8');
+  	process.stdin.once('data', function (text) {
+  		var input = parseInput(text);
+    	if (textIsValid(input, state) && noCollision(input, state)) {
+      		gameCallBack(input);
+   		} else  {
+    		console.log(chalk.red("not a valid move, try again\n"));
+    		takeInput(state, gameCallBack);
+   		}
+  	});
 };
 
 var game = function(state){
 	draw(state);
 	if (state.winner === 'none'){
-		game(changeTurn(checkForGameEnd(runMove(state))));
+		takeInput(state, function(input){
+			game(changeTurn(checkForGameEnd(runMove(state, input))));
+		});
 	};
 };
 
